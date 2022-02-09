@@ -40,11 +40,20 @@ char **string_tokenize(char *s)
 
 
 char *fetch_prompt()
-{
-	char *buf_log;
-	buf_log = (char *)malloc(10*sizeof(char));
-	buf_log = getlogin();
-	return buf_log;
+{	
+	//helper function for fetching username, hostname, current working dir
+	char *buf_user;
+	buf_user = (char *)malloc(10*sizeof(char));
+	buf_user = getlogin();
+
+	char *buf_host;
+	buf_host = (char *)malloc(10*sizeof(char));
+	//buf_host = 
+
+	char *buf_cwd;
+	buf_cwd = (char *)malloc(80*sizeof(char));
+	buf_cwd = getcwd(buf_cwd, sizeof(buf_cwd));
+	return buf_cwd;
 }
 
 int main()
@@ -53,7 +62,7 @@ int main()
 	char *token = " ";
 	char *prompt = ": >";
 	const int max_args = 100;
-	printf("\n %s \n", fetch_prompt());
+	printf("%s \n", fetch_prompt());
 	while (1) {
 
 		i = 0;

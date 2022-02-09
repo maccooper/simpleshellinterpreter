@@ -48,11 +48,17 @@ char *fetch_prompt()
 
 	char *buf_host;
 	buf_host = (char *)malloc(10*sizeof(char));
-	//buf_host = 
+	gethostname(buf_host, sizeof(buf_host));
 
-	char buf[80];
-	getcwd(buf, sizeof(buf));	
-	return buf;
+	char buf_cwd[80];
+	getcwd(buf_cwd, sizeof(buf_cwd));	
+	
+	char prompt[100];
+	snprintf(prompt, sizeof(prompt), "\n%s@%s:%s>\n", buf_user, buf_host, buf_cwd);
+	//printf("%s\n", prompt);
+	free(buf_user);	
+	free(buf_host);
+	return prompt;
 }
 
 int main()
@@ -61,7 +67,6 @@ int main()
 	char *token = " ";
 	char *prompt = ": >";
 	const int max_args = 100;
-	printf("%s \n", fetch_prompt());
 	while (1) {
 
 		i = 0;
@@ -81,6 +86,7 @@ int main()
 		}
 		printf("\n");
 		free(input);
+	//		prompt = fetch_prompt();
 	}
 	free_list(head);
 }

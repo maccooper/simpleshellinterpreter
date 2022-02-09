@@ -37,18 +37,23 @@ char **string_tokenize(char *s)
 	}
 	return args;
 }
+
+
+char *fetch_prompt()
+{
+	char *buf_log;
+	buf_log = (char *)malloc(10*sizeof(char));
+	buf_log = getlogin();
+	return buf_log;
+}
+
 int main()
 {
 	int i, j;
 	char *token = " ";
 	char *prompt = ": >";
 	const int max_args = 100;
-
-	char *buf;
-	buf = (char *)malloc(10*sizeof(char));
-	buf = getlogin();
-	printf("\n %s \n", buf);
-
+	printf("\n %s \n", fetch_prompt());
 	while (1) {
 
 		i = 0;

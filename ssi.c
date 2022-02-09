@@ -50,10 +50,9 @@ char *fetch_prompt()
 	buf_host = (char *)malloc(10*sizeof(char));
 	//buf_host = 
 
-	char *buf_cwd;
-	buf_cwd = (char *)malloc(80*sizeof(char));
-	buf_cwd = getcwd(buf_cwd, sizeof(buf_cwd));
-	return buf_cwd;
+	char buf[80];
+	getcwd(buf, sizeof(buf));	
+	return buf;
 }
 
 int main()

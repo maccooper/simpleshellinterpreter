@@ -20,15 +20,19 @@
 #include <sys/wait.h>
 #include "csc360_list.h"
 
-const int buffer_size = 1000;
-	
+#define BUFFER_SIZE 1000
+#define USER_BUFFER_MAX_SIZE 100
+#define HOST_BUFFER_MAX_SIZE 100
+#define CWD_BUFFER_MAX_SIZE 80
+#define PROMPT_SIZE 300
+
 char **string_tokenize(char *s)
 {
 	//Input:        a string with spaces
 	//Output:       2d array with substrings from s
 	//helper function for p_stat
 	char *ptr = strtok(s, " ");
-	char **args = (char **)malloc(buffer_size * sizeof(char *));
+	char **args = (char **)malloc(BUFFER_SIZE * sizeof(char *));
 	int i = 0;
 	while (ptr != NULL) {
 		args[i] = ptr;
@@ -39,39 +43,35 @@ char **string_tokenize(char *s)
 }
 
 
-char *fetch_prompt()
+void fetch_prompt(char s_prompt[PROMPT_SIZE])
 {	
 	//helper function for fetching username, hostname, current working dir
-	char *buf_user;
-	buf_user = (char *)malloc(10*sizeof(char));
-	buf_user = getlogin();
+	char *buf_user = getlogin();
 
-	char *buf_host;
-	buf_host = (char *)malloc(10*sizeof(char));
+	char buf_host[HOST_BUFFER_MAX_SIZE];
 	gethostname(buf_host, sizeof(buf_host));
 
-	char buf_cwd[80];
+	char buf_cwd[CWD_BUFFER_MAX_SIZE];
 	getcwd(buf_cwd, sizeof(buf_cwd));	
-	
-	//char prompt[100];
-	int buffer_size = snprintf(NULL, 0, "\n%s@%s:%s\n", buf_user, buf_host, buf_cwd);
-	char *s_prompt = malloc(buffer_size + 1);
-	snprintf(s_prompt, sizeof(s_prompt), "\n%s@%s:%s>\n", buf_user, buf_host, buf_cwd);
-	//snprintf(prompt, sizeof(prompt), "\n%s@%s:%s>\n", buf_user, buf_host, buf_cwd);
-	//printf("%s\n", prompt);
-	free(buf_user);	
-	free(buf_host);
-	return s_prompt;
+
+	s_prompt[0] = 0;
+	strncat(s_prompt, buf_user, USER_BUFFER_MAX_SIZE);
+	strncat(s_prompt, "@", 2);
+	strncat(s_prompt, buf_host, HOST_BUFFER_MAX_SIZE);
+	strncat(s_prompt, buf_cwd, CWD_BUFFER_MAX_SIZE);
+	strncat(s_prompt, ">", 2);
 }
 
 int main()
 {
 	int i, j;
 	char *token = " ";
-	char *prompt = ": >";
+	//char *prompt = ": >";
+	char prompt[PROMPT_SIZE];
+	fetch_prompt(prompt);
 	const int max_args = 100;
-	char *a = fetch_prompt();
-	printf("%s\n", a);
+	//	char *a = fetch_prompt();
+	//printf("%s\n", a);
 	while (1) {
 
 		i = 0;
@@ -91,7 +91,7 @@ int main()
 		}
 		printf("\n");
 		free(input);
-	//		prompt = fetch_prompt();
+		fetch_prompt(prompt);
 	}
 	free_list(head);
 }

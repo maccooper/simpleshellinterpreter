@@ -45,7 +45,6 @@ char **string_tokenize(char *s)
 	return args;
 }
 
-	
 void fetch_prompt(char s_prompt[PROMPT_SIZE])
 {	
 	//helper function for fetching username, hostname, current working dir
@@ -65,33 +64,8 @@ void fetch_prompt(char s_prompt[PROMPT_SIZE])
 	strncat(s_prompt, ">", 2);
 }
 
-/*void check_zombie()
+void update_process()
 {
-	//removes terminated processess from linked list, including zombies
-	int status;
-	int ret_val = 0;
-	while (1) {
-		usleep(1000);
-		if (head == NULL) {
-			return;
-		}
-		ret_val = waitpid(-1, &status, WNOHANG);
-		if (ret_val > 0) {
-			//remove the background process from ll
-			//Node *n = find_node(ret_val);
-			//printf("%s\n",n->process_name);
-			remove_node(ret_val);
-		} else if (ret_val == 0) {
-			break;
-		} else {
-			perror("waitpid failed");
-			exit(EXIT_FAILURE);
-		}
-	}
-}
-*/
-
-void update_process() {
 	int status;
 	int pid = waitpid(-1, &status, WNOHANG|WUNTRACED|WCONTINUED);
 	if(pid > 0) {
@@ -159,7 +133,8 @@ void bg_list()
 	printf("Total background jobs:\t%i\n", process_counter);
 }
 
-void change_dir(char **args) {
+void change_dir(char **args)
+{
 	if (args[1] == NULL || strcmp(args[1],"~") == 0) {
 		chdir(getenv("HOME"));
 	} else if (strcmp(args[1], "..") == 0){
@@ -171,7 +146,8 @@ void change_dir(char **args) {
 	}
 }
 
-void ls_command(char **argv, int arglength) {
+void ls_command(char **argv, int arglength)
+{
 	char *argument_list[arglength + 1];
 	int i;
 	for(i = 0; i < arglength; ++i) {
@@ -194,6 +170,57 @@ void ls_command(char **argv, int arglength) {
 	}
 }
 
+int process_exists(int pid)
+{
+	char dir_buffer[BUFFER_SIZE];
+	sprintf(dir_buffer, "/proc/%d", pid);
+	DIR *dir = opendir(dir_buffer);
+	if(!dir) {
+		if (ENOENT == errno) {
+			printf("error: process %d does not exist.\n", pid);
+		} else {
+			printf("error: process %d is unaccessible.\n", pid);
+		}
+		return 0;
+	}
+	return 1;
+}
+
+void bg_stop(int pid)
+{
+	//sends STOP signal to target <pid>
+	if (!process_exists(pid)) 
+		return;
+	if (kill(pid, SIGSTOP)) {
+		printf("error: failed to stop process %d\n", pid);
+	}
+}
+
+void bg_start(int pid)
+{
+	//sends CONT signal to target <pid>
+	if (!process_exists(pid)) 
+		return;
+	if (kill(pid, SIGCONT)) {
+		printf("error: failed to start process %d\n", pid);
+	}
+}
+
+void bg_kill(int pid) {
+	//sends TERM signal to target <pid>
+	if (!process_exists(pid)) 
+		return;
+	Node *target = find_node(pid);
+	if (target && target->run_state == 0) {
+		bg_start(pid);
+	}
+	usleep(1000);
+	if (kill(pid, SIGTERM)) {
+		printf("error: failed to killed process %d\n", pid);
+	}
+	
+}
+
 void dispatch_command(char **args, int length)
 {
 	//manages function calls based on console command
@@ -201,24 +228,32 @@ void dispatch_command(char **args, int length)
 	//	printf("bg list command here\n");
 		bg_list();
 	}
-	if (!(strcasecmp(args[0], "bg"))) {
+	else if (!(strcasecmp(args[0], "bg"))) {
 	//	printf("bg entry command\n");
 	bg_entry(args, length);
 	}
-	if (!(strcasecmp(args[0], "ls"))) {
+	else if (!(strcasecmp(args[0], "ls"))) {
 		ls_command(args, length);
 	}
-	if (!(strcasecmp(args[0], "cd"))) {
+	else if (!(strcasecmp(args[0], "cd"))) {
 		if(length > 2){
 			printf("Too many arguments for cd\n");
 		} else {
 			change_dir(args);	
 		}
 	}
-	if (!(strcasecmp(args[0], "exit"))) {
+	else if (!(strcasecmp(args[0], "exit"))) {
 		printf("Exiting the program\n");
 		exit(0);
-	} 
+	} else if (!(strcasecmp(args[0], "bgstop"))) {
+		bg_stop(atoi(args[1]));
+	} else if (!(strcasecmp(args[0], "bgstart"))) {
+		bg_start(atoi(args[1]));
+	} else if (!(strcasecmp(args[0], "bgkill"))) {
+		bg_kill(atoi(args[1]));
+	} else {
+		printf("Command not recognized\n");
+	}
 }
 
 int main()

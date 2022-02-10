@@ -139,15 +139,20 @@ void ls_command(char **argv, int arglength) {
 		argument_list[i] = argv[i];
 	}
 	argument_list[arglength] = NULL;
+	int status;
 	pid_t pid;
 	pid = fork();
 	if (pid == 0) {
-		int status = execvp("ls", argument_list);
+		status = execvp("ls", argument_list);
 		if(status == -1) {
 			printf("Terminated Incorrectly\n");
 		}
+	} else if (pid > 0) {
+		wait(&status);
+	} else {
+		perror("fork failed");
+		exit(EXIT_FAILURE);
 	}
-		
 }
 
 void dispatch_command(char **args, int length)

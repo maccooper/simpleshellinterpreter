@@ -65,7 +65,7 @@ void fetch_prompt(char s_prompt[PROMPT_SIZE])
 	strncat(s_prompt, ">", 2);
 }
 
-void check_zombie()
+/*void check_zombie()
 {
 	//removes terminated processess from linked list, including zombies
 	int status;
@@ -89,7 +89,32 @@ void check_zombie()
 		}
 	}
 }
+*/
 
+void update_process() {
+	int status;
+	int pid = waitpid(-1, &status, WNOHANG|WUNTRACED|WCONTINUED);
+	if(pid > 0) {
+		if(WIFCONTINUED(status)) {
+			Node *n = find_node(pid);
+			if(n) {
+				n->run_state = 1;
+			} else  if (WIFSTOPPED(status)) {
+				Node *n = find_node(pid);
+				if(n) {
+					n->run_state = 0;
+				}
+			} else if (WIFEXITED(status)) {
+				remove_node(pid);
+				printf("%d Finished\n", pid);
+			} else if (WIFSIGNALED(status)) {
+				remove_node(pid);
+				printf("%d Terminated\n", pid);
+			}
+
+		}
+	}
+}
 
 void bg_entry(char **argv, int arglength)
 {
@@ -98,7 +123,7 @@ void bg_entry(char **argv, int arglength)
 	//runs a process in the background while parent continues to read input. Adds pid to linkedlist datastructure
 	pid_t pid;
 	pid = fork();
-	check_zombie();
+	update_process();
 	if (pid == 0) {
 		//in child process
 		if (execvp(argv[1], &argv[1]) < 0) {
@@ -212,6 +237,7 @@ int main()
 		char *input = NULL;
 		char *iterToken;
 		char *args[max_args];
+		update_process();
 		input = readline(prompt);
 		if (!strcmp(input, "")) {
 			continue;
@@ -225,6 +251,7 @@ int main()
 		}
 		dispatch_command(args, i);
 		//printf("\n");
+		update_process();
 		fetch_prompt(prompt);
 	}
 	free_list(head);

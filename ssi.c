@@ -132,6 +132,18 @@ void bg_list()
 	printf("Total background jobs:\t%i\n", process_counter);
 }
 
+void change_dir(char **args) {
+	if (args[1] == NULL || strcmp(args[1],"~") == 0) {
+		chdir(getenv("HOME"));
+	} else if (strcmp(args[1], "..") == 0){
+		chdir("..");
+	} else { 
+		if(chdir(args[1]) != 0) {
+			perror("chdir() failed");
+		}
+	}
+}
+
 void ls_command(char **argv, int arglength) {
 	char *argument_list[arglength + 1];
 	int i;
@@ -170,14 +182,18 @@ void dispatch_command(char **args, int length)
 		ls_command(args, length);
 	}
 	if (!(strcasecmp(args[0], "cd"))) {
-		printf("cd-ez nuts\n");
+		if(length > 2){
+			printf("Too many arguments for cd\n");
+		} else {
+			change_dir(args);	
+		}
 	}
 	if (!(strcasecmp(args[0], "exit"))) {
 		printf("Exiting the program\n");
 		exit(0);
-	}
-
+	} 
 }
+
 int main()
 {
 	int i, j;

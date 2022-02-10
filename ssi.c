@@ -53,12 +53,15 @@ char *fetch_prompt()
 	char buf_cwd[80];
 	getcwd(buf_cwd, sizeof(buf_cwd));	
 	
-	char prompt[100];
-	snprintf(prompt, sizeof(prompt), "\n%s@%s:%s>\n", buf_user, buf_host, buf_cwd);
+	//char prompt[100];
+	int buffer_size = snprintf(NULL, 0, "\n%s@%s:%s\n", buf_user, buf_host, buf_cwd);
+	char *s_prompt = malloc(buffer_size + 1);
+	snprintf(s_prompt, sizeof(s_prompt), "\n%s@%s:%s>\n", buf_user, buf_host, buf_cwd);
+	//snprintf(prompt, sizeof(prompt), "\n%s@%s:%s>\n", buf_user, buf_host, buf_cwd);
 	//printf("%s\n", prompt);
 	free(buf_user);	
 	free(buf_host);
-	return prompt;
+	return s_prompt;
 }
 
 int main()
@@ -67,6 +70,8 @@ int main()
 	char *token = " ";
 	char *prompt = ": >";
 	const int max_args = 100;
+	char *a = fetch_prompt();
+	printf("%s\n", a);
 	while (1) {
 
 		i = 0;

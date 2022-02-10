@@ -45,7 +45,7 @@ char **string_tokenize(char *s)
 	return args;
 }
 
-	
+
 void fetch_prompt(char s_prompt[PROMPT_SIZE])
 {	
 	//helper function for fetching username, hostname, current working dir
@@ -65,30 +65,6 @@ void fetch_prompt(char s_prompt[PROMPT_SIZE])
 	strncat(s_prompt, ">", 2);
 }
 
-void check_zombie()
-{
-	//removes terminated processess from linked list, including zombies
-	int status;
-	int ret_val = 0;
-	while (1) {
-		usleep(1000);
-		if (head == NULL) {
-			return;
-		}
-		ret_val = waitpid(-1, &status, WNOHANG);
-		if (ret_val > 0) {
-			//remove the background process from ll
-			remove_node(ret_val);
-		} else if (ret_val == 0) {
-			break;
-		} else {
-			perror("waitpid failed");
-			exit(EXIT_FAILURE);
-		}
-	}
-}
-
-
 void bg_entry(char **argv, int arglength)
 {
 	//Input:        char ** array containing string args for process to run in background
@@ -96,7 +72,6 @@ void bg_entry(char **argv, int arglength)
 	//runs a process in the background while parent continues to read input. Adds pid to linkedlist datastructure
 	pid_t pid;
 	pid = fork();
-	check_zombie();
 	if (pid == 0) {
 		//in child process
 		if (execvp(argv[1], &argv[1]) < 0) {
@@ -132,23 +107,6 @@ void bg_list()
 	printf("Total background jobs:\t%i\n", process_counter);
 }
 
-void ls_command(char **argv, int arglength) {
-	char *argument_list[arglength + 1];
-	int i;
-	for(i = 0; i < arglength; ++i) {
-		argument_list[i] = argv[i];
-	}
-	argument_list[arglength] = NULL;
-	pid_t pid;
-	pid = fork();
-	if (pid == 0) {
-		int status = execvp("ls", argument_list);
-		if(status == -1) {
-			printf("Terminated Incorrectly\n");
-		}
-	}
-		
-}
 
 void dispatch_command(char **args, int length)
 {
@@ -162,7 +120,7 @@ void dispatch_command(char **args, int length)
 	bg_entry(args, length);
 	}
 	if (!(strcasecmp(args[0], "ls"))) {
-		ls_command(args, length);
+		printf("ls recognized\n");
 	}
 	if (!(strcasecmp(args[0], "cd"))) {
 		printf("cd-ez nuts\n");

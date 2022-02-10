@@ -78,6 +78,8 @@ void check_zombie()
 		ret_val = waitpid(-1, &status, WNOHANG);
 		if (ret_val > 0) {
 			//remove the background process from ll
+			//Node *n = find_node(ret_val);
+			//printf("%s\n",n->process_name);
 			remove_node(ret_val);
 		} else if (ret_val == 0) {
 			break;
